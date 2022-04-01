@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Drawing;
+using System;
+using System.IO;
 
 namespace TextileToHTML_Parser.AppData
 {
@@ -48,6 +51,8 @@ namespace TextileToHTML_Parser.AppData
         private readonly string UnNumberedListTagName = "UnNumberedListTag";
         private readonly string ListItemTagName = "ListItemTag";
         private readonly string ParagraphTagName = "ParagraphTag";
+        private readonly string PreTagName = "PreTag";
+        private readonly string CodeTagName = "CodeTag";
 
         #endregion
 
@@ -66,6 +71,8 @@ namespace TextileToHTML_Parser.AppData
         private readonly string StandartUnNumberedListTag = "<ul>";
         private readonly string StandartListItemTag = "<li>";
         private readonly string StandartParagraphTag = "<p>";
+        private readonly string StandartPreTag = "<pre>";
+        private readonly string StandartCodeTag = "<code>";
 
         private readonly string StandartBoldItalicClosedTag = "</strong></em>";
         private readonly string StandartBoldClosedTag = "</strong>";
@@ -76,6 +83,8 @@ namespace TextileToHTML_Parser.AppData
         private readonly string StandartUnNumberedListClosedTag = "</ul>";
         private readonly string StandartListItemClosedTag = "</li>";
         private readonly string StandartParagraptClosedTag = "</p>";
+        private readonly string StandartPreClosedTag = "</pre>";
+        private readonly string StandartCodeClosedTag = "</code>";
 
         private string StandartNewLineTag = "<br />";
 
@@ -92,9 +101,11 @@ namespace TextileToHTML_Parser.AppData
         private readonly string TessaUnNumberedListTag = "</span><ul class=\\\"forum-ul\\\">";
         private readonly string TessaListItemTag = "<li><p><span>";
         private readonly string TessaParagraphTag = "<p><span>";
+        private readonly string TessaPreTag = "<div class=\\\"forum-block-monospace\\\"><p><span>";
 
         private readonly string TessaListItemClosedTag = "</span></p></li>";
         private readonly string TessaParagraphClosedTag = "</span></p>";
+        private readonly string TessaPreCloseTag = "</span></p></div>";
 
         private readonly string TessaNewLineTag = "</span></p><p><span>";
 
@@ -114,11 +125,19 @@ namespace TextileToHTML_Parser.AppData
         /// </summary>
         private static readonly string headerCloseTagTemplate = @"<\/h[1-6]>";
 
+        /// <summary>
+        /// Шаблон регулярного выражения для тега изображения.
+        /// </summary>
+        private static readonly string imagesTagTemplate = "<img src=\"(.*?)\" alt=\"\" />";
+
         private static readonly Regex _headerOpenTag = new Regex(headerOpenTagTemplate,
            RegexOptions.Singleline | RegexOptions.Compiled);
 
         private static readonly Regex _headerCloseTag = new Regex(headerCloseTagTemplate,
            RegexOptions.Singleline | RegexOptions.Compiled);
+
+        private static readonly Regex _imagesTag = new Regex(imagesTagTemplate,
+            RegexOptions.Multiline);
 
         #endregion
 
@@ -171,6 +190,8 @@ namespace TextileToHTML_Parser.AppData
             StandartOpeningTags.Add(NumberedListTagName, StandartNumberedListTag);
             StandartOpeningTags.Add(UnNumberedListTagName, StandartUnNumberedListTag);
             StandartOpeningTags.Add(ListItemTagName, StandartListItemTag);
+            StandartOpeningTags.Add(PreTagName, StandartPreTag);
+            StandartOpeningTags.Add(CodeTagName, StandartCodeTag);
 
             StandartClosingTags.Add(ParagraphTagName, StandartParagraptClosedTag);
             StandartClosingTags.Add(BoldItalicTagName, StandartBoldItalicClosedTag);
@@ -181,6 +202,8 @@ namespace TextileToHTML_Parser.AppData
             StandartClosingTags.Add(NumberedListTagName, StandartNumberedListClosedTag);
             StandartClosingTags.Add(UnNumberedListTagName, StandartUnNumberedListClosedTag);
             StandartClosingTags.Add(ListItemTagName, StandartListItemClosedTag);
+            StandartClosingTags.Add(PreTagName, StandartPreClosedTag);
+            StandartClosingTags.Add(CodeTagName, StandartCodeClosedTag);
         }
 
         /// <summary>
@@ -200,6 +223,8 @@ namespace TextileToHTML_Parser.AppData
             TessaOpeningTags.Add(NumberedListTagName, TessaNumberedListTag);
             TessaOpeningTags.Add(UnNumberedListTagName, TessaUnNumberedListTag);
             TessaOpeningTags.Add(ListItemTagName, TessaListItemTag);
+            TessaOpeningTags.Add(PreTagName, TessaPreTag);
+            TessaOpeningTags.Add(CodeTagName, TessaPreTag);
 
             TessaClosingTags.Add(ParagraphTagName, TessaParagraphClosedTag);
             TessaClosingTags.Add(BoldItalicTagName, SpanClosedTag);
@@ -210,27 +235,33 @@ namespace TextileToHTML_Parser.AppData
             TessaClosingTags.Add(NumberedListTagName, StandartNumberedListClosedTag);
             TessaClosingTags.Add(UnNumberedListTagName, StandartUnNumberedListClosedTag);
             TessaClosingTags.Add(ListItemTagName, TessaListItemClosedTag);
+            TessaClosingTags.Add(PreTagName, TessaPreCloseTag);
+            TessaClosingTags.Add(CodeTagName, TessaPreCloseTag);
         }
 
         #endregion
 
         private void ParseString()
         {
-            foreach(var tag in TessaOpeningTags)
+            foreach (var tag in TessaOpeningTags)
             {
                 this.ParseTag(tag);
             }
 
-            // установка начала и конца строки.
-            this.SetPreAndPostString();
+
             // удаление лишних символов новой строки.
             this.RemoveSumbolNewString();
             // преобразуем тег <br /> в </p><p>.
             this.ParseNewLineTag();
             // преобразуем код "&#8220" и "&#8221" в символы "\\\"".
             this.ParseQuotesSymbol();
-
+            // преобразуемзаголовки.
             this.ParseHeaderString();
+
+            this.ParseAttachmentImages();
+
+            // установка начала и конца строки.
+            this.SetPreAndPostString();
         }
 
         /// <summary>
@@ -252,7 +283,7 @@ namespace TextileToHTML_Parser.AppData
         /// </summary>
         private void ParseNewLineTag()
         {
-            if(ResultString.Contains(StandartNewLineTag))
+            if (ResultString.Contains(StandartNewLineTag))
             {
                 ResultString = ResultString.Replace(StandartNewLineTag, TessaNewLineTag);
             }
@@ -284,7 +315,7 @@ namespace TextileToHTML_Parser.AppData
         private void RemoveSumbolNewString()
         {
             var symbolIndex = ResultString.IndexOf('\n');
-            while(symbolIndex != -1)
+            while (symbolIndex != -1)
             {
                 ResultString = ResultString.Remove(symbolIndex, 1);
                 symbolIndex = ResultString.IndexOf('\n');
@@ -309,9 +340,53 @@ namespace TextileToHTML_Parser.AppData
             {
                 ResultString = _headerOpenTag.Replace(ResultString, "<p><span style=\\\"font-weight:bold;\\\" data-custom-style=\\\"font-size:18;\\\">");
             }
-            while(Regex.IsMatch(ResultString, headerCloseTagTemplate, RegexOptions.IgnorePatternWhitespace | RegexOptions.Singleline | RegexOptions.Compiled))
+            while (Regex.IsMatch(ResultString, headerCloseTagTemplate, RegexOptions.IgnorePatternWhitespace | RegexOptions.Singleline | RegexOptions.Compiled))
             {
                 ResultString = _headerCloseTag.Replace(ResultString, "</span></p>");
+            }
+        }
+
+        private void ParseAttachmentImages()
+        {
+            var matches = _imagesTag.Matches(ResultString);
+            if(matches.Count > 0)
+            {
+                var fileDirectory = $"D:\\WORK_SYNTELLECT\\OtherFiles\\Migration\\9910\\{matches[0].Groups[1]}";
+                var image = Image.FromFile(fileDirectory);
+                var resizeImg = (Image)(new Bitmap(image, new Size { Width = image.Width / 3, Height = image.Height / 3 }));
+
+                var Id = new Guid("ea1edecf-0f7d-463f-a013-fde00e0cbc55");
+                var caption = Id.ToString().Replace("-", "");
+                var uri = $"https:\\\\{caption}";
+                var width = image.Size.Width / 3;
+                var height = image.Size.Height / 3;
+
+                var startString =
+                    "{\"Attachments\":[";
+
+                var captionString =
+                    $"{{\"Caption\":\"{caption}\"," +
+                    $"\"FileName\":\"\"," +
+                    $"\"Uri\":\"{uri}\"," +
+                    $"\"ID::uid\":\"{Id}\"," +
+                    $"\"MessageID::uid\":\"00000000-0000-0000-0000-000000000000\"," +
+                    $"\"StoreMode::int\":0," +
+                    $"\"Type::int\":2}}";
+
+                var finishString = "],";
+
+                var fileBytes = File.ReadAllBytes(fileDirectory);
+                var base64FileString = Convert.ToBase64String(fileBytes);
+
+                var textString =
+                    $"<p><span><img data-custom-style=\\\"width:{width};height:{height};\\\" " +
+                    $"name=\\\"{caption}\\\" " +
+                    $"src=\\\"data:image/png;base64,{base64FileString}\\\"></span></p>";
+
+                var preString = "\"Text\":\"<div class=\\\"forum-div\\\">";
+                var postString = "</div>\"}";
+
+                var resString = startString + captionString + finishString + preString + textString + postString;
             }
         }
 

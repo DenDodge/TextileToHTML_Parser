@@ -6,36 +6,136 @@ namespace TextileToHTMLToHTML_Parser
     {
         static void Main(string[] args)
         {
-            //string testString = "Коллеги, добрый день!\r\nИспользуем API Tessa для подписания файлов при завершении задания (подписываются все файлы в карточке, их может быть много). Версия 3.5.0.11\r\nПри этом в ряде случаев у заказчика при подписании воспроизводится ошибка:\r\nTessa.Platform.Validation.ValidationException:\r\nError: Exception, ValidationResult: EdsService: Can't find file by path: C:\\Users\\kadantsev\\AppData\\Local\\Temp\\Tessa\\Files\\ltn4dnhx.5eo\\eds-sign.bin\r\nSystem.InvalidOperationException: EdsService: Can't find file by path: C:\\Users\\kadantsev\\AppData\\Local\\Temp\\Tessa\\Files\\ltn4dnhx.5eo\\eds-sign.bin\r\nв Tessa.Host.EDS.EdsService.CheckFilePath(String filePath, String paramName)\r\nв Tessa.Host.EDS.EdsService.GenerateSignatureAsync(String filePath, String hashAlgorithm, Byte[] certificate, CancellationToken cancellationToken)\r\nв Tessa.Host.EDS.EdsServiceServer.GenerateSignatureAsync(IPipeRequest request, IPipeResponse response, CancellationToken cancellationToken)\r\nв Tessa.Host.EDS.HostEdsExtensions.<>c.<CreateHostEdsServiceRouter>b__0_0(EdsServiceServer instance, IPipeRequest request, IPipeResponse response, CancellationToken ct)\r\nв Tessa.Platform.Pipes.PipesExtensions.<>c__DisplayClass5_0`1.<Register>b__0(IPipeRequest request, IPipeResponse response, CancellationToken ct)\r\nв Tessa.Platform.Pipes.PipeMethodHandler.TryHandleCoreAsync(IPipeRequest request, IPipeResponse response, CancellationToken cancellationToken)\r\nв Tessa.Platform.Pipes.PipeHandler.TryHandleAsync(IPipeRequest request, IPipeResponse response, CancellationToken cancellationToken)\r\nв Tessa.Platform.Pipes.PipesExtensions.HandleAsync(IPipeRouter router, IPipeRequest request, IPipeResponse response, CancellationToken cancellationToken)\r\nв Tessa.Platform.Pipes.PipeServer.ListenCoreAsync(Object options, IPipeRouter router, IPipeServerTraceListener traceListener, CancellationToken cancellationToken)\r\nat Tessa.Platform.Pipes.PipeClientConnection.SendCoreAsync(IPipeRequest request, CancellationToken cancellationToken)\r\nat Tessa.Host.EDS.EdsServiceClient.GenerateSignatureAsync(String filePath, String hashAlgorithm, Byte[] certificate, CancellationToken cancellationToken)\r\nat Tessa.Host.EDS.EdsServiceHost.GenerateSignatureAsync(String filePath, String hashAlgorithm, Byte[] certificate, CancellationToken cancellationToken)\r\nat Tessa.Extensions.Default.Client.EDS.ServiceEDSManagerForCAdES.GenerateSignatureAsync(Byte[] certificate, ISignatureFile file, String hashAlgo, CancellationToken cancellationToken) in D:\\Projects\\Tessa\\PPPUpdate\\pppudp\\Extensions\\Tessa.Extensions.Default.Client\\EDS\\ServiceEDSManagerForCAdES.cs:line 115\r\nat Tessa.Extensions.Default.Client.EDS.ServiceEDSManagerForCAdES.SignDocumentAsync(Byte[] certificate, ISignatureFile file, CancellationToken cancellationToken) in D:\\Projects\\Tessa\\PPPUpdate\\pppudp\\Extensions\\Tessa.Extensions.Default.Client\\EDS\\ServiceEDSManagerForCAdES.cs:line 52\r\nat Tessa.Extensions.Default.Client.EDS.AggregateEDSManager.SignDocumentAsync(Byte[] certificate, ISignatureFile file, CancellationToken cancellationToken) in D:\\Projects\\Tessa\\PPPUpdate\\pppudp\\Extensions\\Tessa.Extensions.Default.Client\\EDS\\AggregateEDSManager.cs:line 57\r\nat Tessa.Extensions.Client.Workflow.KrProcess.SignTaskUIExtension.SignFileAsync(ValidationResultBuilder validationResultBuilder, IEDSCertificate cert, IFileVersion version, String comment) in D:\\Projects\\Tessa\\PPPUpdate\\pppudp\\Extensions\\Tessa.Extensions.Client\\Workflow\\KrProcess\\SignTaskUIExtension.cs:line 110\r\nat Tessa.Extensions.Client.Workflow.KrProcess.SignTaskUIExtension.SignFilesAsync(ICardUIExtensionContext context, ITaskAction action, TaskViewModel taskViewModel) in D:\\Projects\\Tessa\\PPPUpdate\\pppudp\\Extensions\\Tessa.Extensions.Client\\Workflow\\KrProcess\\SignTaskUIExtension.cs:line 170\r\n\r\nСудя по логам, данной ошибке обычно предшествует предупреждение вида: The process cannot access the file 'C:\\Users\\yavorskiy\\AppData\\Local\\Temp\\Tessa\\Files\\2xwyn2mg.n3r\\eds-sign.bin' because it is being used by another process.\r\nТ.е. система не может получить доступ к файлу, т.к. он занят другим процессом.\r\nТакую же ошибку на тестовом сервере мне пока воспроизвести не удалось, но зато поймала другую, она воспроизводится, если открыть каталог с временными файлами (например, по кнопке «Отрыть для чтения/редактирования» в каталоге). А вот если закрыть сам каталог и все файлы из карточки и сохранить карточку еще раз, подписание проходит успешно\r\n\r\nЛог во вложении\r\n\r\nПодскажите, пожалуйста, из-за чего такое может происходить и как избавиться от ошибки (или хотя обработать ее, чтобы пользователь получал понятную ошибку)";
-            //string testString1 = "Что нужно сделать.\r\n\r\nh1. В справочнике типовых задач\r\n\r\n# В форме типовой задачи сделать два флажка (и поля в базе): Для КАСКО, Для ОСАГО. По умолчанию ОБА установлены.\r\n# Сверху формы сделать выпадающий список, позволяющий фильтровать текущий список задач:  Задачи КАСКО, Задачи ОСАГО, Задачи КАСКО\\ОСАГО, Все. Получается 4 варианта фильтра. По умолчанию выбрано ВСЕ.\r\n\r\nh1. В диалоге передачи КД.\r\n\r\n# Диалог расширить так, чтобы поле для передачи КД расширилось в два раза.\r\n# Выпадающий список ТЗ увеличить в высоту тоже в два раза.\r\n# Если текущая КД - КАСКО, то в списке только задачи где стоит флажок КАСКО, Если текущая КД - ОСАГО - то в списке типовых задач только задачи ОСАГО.\r\n";
-            //string testString = "Ошибка из разряда \"не делайте так\" :)" +
-            //                    "\r\n" +
-            //                    "\r\n" +
-            //                    "Пусть есть карточка автомобиль (или любая другая с выпадающим списком, или кнопкой троеточия)." +
-            //                    "\r\n" +
-            //                    "\r\n" +
-            //                    "# Зайдите в поле списка, например, список владельцев и выберите одного владельца.\r\n" +
-            //                    "# Нажмите стребку влево, чтобы переместить курсов в начало поля. \r\n" +
-            //                    "# Введите произвольный текст (нажмите цифру 1).\r\n" +
-            //                    "# Нажмите левой кнопкой мыши на выбранное в пункте 1 справочное значение.\r\n" +
-            //                    "# Нажмите клавишу delete для удаление элемента списка.\r\n" +
-            //                    "# Нажмите delete еще раз" +
-            //                    "\r\n" +
-            //                    "\r\n" +
-            //                    "!1.png!" +
-            //                    "\r\n\r\nОжидаемое поведение:\r\n- Элемент списка выделяется полностью\r\n- Элемент удаляется из поля\r\n- Произвольный текс, введенный в пункте 3 стирается\r\n\r\nТекущее поведение:\r\n- Элемент списка выделяется без первой буквы\r\n- Выводится сообщение об ошибке ArgumentOutOfRangeException \r\n- После удаления элемента списка и повторном нажатии клавиши delete всегда будет выводиться сообщение об ошибке:\r\n\r\n<pre>\r\nSystem.ArgumentOutOfRangeException: Length cannot be less than zero.\r\nParameter name: length\r\n   at System.String.Substring(Int32 startIndex, Int32 length)\r\n   at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.FiniteElements(Int32& x)\r\n   at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.InputText()\r\n   at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.Erase(Int32 backspace)\r\n   at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.PreviewKey(Key key, Boolean fromCommitChanges)\r\n   at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.entityBox_PreviewKeyDown(Object sender, KeyEventArgs e)\r\n   at System.Windows.RoutedEventArgs.InvokeHandler(Delegate handler, Object target)\r\n   at System.Windows.RoutedEventHandlerInfo.InvokeHandler(Object target, RoutedEventArgs routedEventArgs)\r\n   at System.Windows.EventRoute.InvokeHandlersImpl(Object source, RoutedEventArgs args, Boolean reRaised)\r\n   at System.Windows.UIElement.RaiseEventImpl(DependencyObject sender, RoutedEventArgs args)\r\n   at System.Windows.UIElement.RaiseTrustedEvent(RoutedEventArgs args)\r\n   at System.Windows.Input.InputManager.ProcessStagingArea()\r\n   at System.Windows.Input.InputManager.ProcessInput(InputEventArgs input)\r\n   at System.Windows.Input.InputProviderSite.ReportInput(InputReport inputReport)\r\n   at System.Windows.Interop.HwndKeyboardInputProvider.ReportInput(IntPtr hwnd, InputMode mode, Int32 timestamp, RawKeyboardActions actions, Int32 scanCode, Boolean isExtendedKey, Boolean isSystemKey, Int32 virtualKey)\r\n   at System.Windows.Interop.HwndKeyboardInputProvider.ProcessKeyAction(MSG& msg, Boolean& handled)\r\n   at System.Windows.Interop.HwndSource.CriticalTranslateAccelerator(MSG& msg, ModifierKeys modifiers)\r\n   at System.Windows.Interop.HwndSource.OnPreprocessMessage(Object param)\r\n   at System.Windows.Threading.ExceptionWrapper.InternalRealCall(Delegate callback, Object args, Int32 numArgs)\r\n   at System.Windows.Threading.ExceptionWrapper.TryCatchWhen(Object source, Delegate callback, Object args, Int32 numArgs, Delegate catchHandler)\r\n</pre>\r\n\r\n\r\nЕсли после ввода произвольного текста не выделять элемент, введенный в пункте 1, а поставить курсор в конец поля и нажать пробел, то выведется следующее сообщение об ошибке:\r\n\r\n<pre>\r\nSystem.ArgumentOutOfRangeException: Specified argument was out of the range of valid values.\r\nParameter name: startIndex\r\n   at System.String.Insert(Int32 startIndex, String value)\r\n   at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.PreviewKey(Key key, Boolean fromCommitChanges)\r\n   at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.entityBox_PreviewKeyDown(Object sender, KeyEventArgs e)\r\n   at System.Windows.RoutedEventArgs.InvokeHandler(Delegate handler, Object target)\r\n   at System.Windows.RoutedEventHandlerInfo.InvokeHandler(Object target, RoutedEventArgs routedEventArgs)\r\n   at System.Windows.EventRoute.InvokeHandlersImpl(Object source, RoutedEventArgs args, Boolean reRaised)\r\n   at System.Windows.UIElement.RaiseEventImpl(DependencyObject sender, RoutedEventArgs args)\r\n   at System.Windows.UIElement.RaiseTrustedEvent(RoutedEventArgs args)\r\n   at System.Windows.Input.InputManager.ProcessStagingArea()\r\n   at System.Windows.Input.InputManager.ProcessInput(InputEventArgs input)\r\n   at System.Windows.Input.InputProviderSite.ReportInput(InputReport inputReport)\r\n   at System.Windows.Interop.HwndKeyboardInputProvider.ReportInput(IntPtr hwnd, InputMode mode, Int32 timestamp, RawKeyboardActions actions, Int32 scanCode, Boolean isExtendedKey, Boolean isSystemKey, Int32 virtualKey)\r\n   at System.Windows.Interop.HwndKeyboardInputProvider.ProcessKeyAction(MSG& msg, Boolean& handled)\r\n   at System.Windows.Interop.HwndSource.CriticalTranslateAccelerator(MSG& msg, ModifierKeys modifiers)\r\n   at System.Windows.Interop.HwndSource.OnPreprocessMessage(Object param)\r\n   at System.Windows.Threading.ExceptionWrapper.InternalRealCall(Delegate callback, Object args, Int32 numArgs)\r\n   at System.Windows.Threading.ExceptionWrapper.TryCatchWhen(Object source, Delegate callback, Object args, Int32 numArgs, Delegate catchHandler)\r\n</pre>\r\n\r\n\r\n\r\nЕсли позволите, могу предположить, что что-то не так с функцией <code>Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.InputText()</code>. На сколько я понял, она неверно определяет конечный индекс End <code>InternalAutoCompleteItem internalItem = new InternalAutoCompleteItem();</code>\r\nЕсли свойство End - это индекс окончания введенной строки, а Home - это тачало, то после ввода одного символа в новосозданном internalItem'е End равен Home, который равен нулю. Это немного подозрительно. Возможно из-за этого все остальные функции обсчитываются на этот один символ (отсюда выделение элемента на один короче), так как функции думают, что один элемент короче на 1 символ. \r\n\r\n!2.png!\r\n\r\nДа пребудет с Вами сила!";
+            string testString = "Ошибка из разряда \"не делайте так\" :)\r\n\r\n" +
+                "Пусть есть карточка автомобиль (или любая другая с выпадающим списком, или кнопкой троеточия).\r\n\r\n" +
+                "# Зайдите в поле списка, например, список владельцев и выберите одного владельца.\r\n" +
+                "# Нажмите стребку влево, чтобы переместить курсов в начало поля. \r\n" +
+                "# Введите произвольный текст (нажмите цифру 1).\r\n" +
+                "# Нажмите левой кнопкой мыши на выбранное в пункте 1 справочное значение.\r\n" +
+                "# Нажмите клавишу delete для удаление элемента списка.\r\n" +
+                "# Нажмите delete еще раз\r\n\r\n" +
+                "!1.png!\r\n\r\n" +
+                "Ожидаемое поведение:\r\n" +
+                "- Элемент списка выделяется полностью\r\n" +
+                "- Элемент удаляется из поля\r\n" +
+                "- Произвольный текс, введенный в пункте 3 стирается\r\n\r\n" +
+                "Текущее поведение:\r\n" +
+                "- Элемент списка выделяется без первой буквы\r\n" +
+                "- Выводится сообщение об ошибке ArgumentOutOfRangeException \r\n" +
+                "- После удаления элемента списка и повторном нажатии клавиши delete всегда будет выводиться сообщение об ошибке:\r\n\r\n" +
+                "<pre>\r\n" +
+                "System.ArgumentOutOfRangeException: Length cannot be less than zero.\r\n" +
+                "Parameter name: length\r\n" +
+                "   at System.String.Substring(Int32 startIndex, Int32 length)\r\n" +
+                "   at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.FiniteElements(Int32& x)\r\n" +
+                "   at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.InputText()\r\n" +
+                "   at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.Erase(Int32 backspace)\r\n" +
+                "   at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.PreviewKey(Key key, Boolean fromCommitChanges)\r\n" +
+                "   at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.entityBox_PreviewKeyDown(Object sender, KeyEventArgs e)\r\n" +
+                "   at System.Windows.RoutedEventArgs.InvokeHandler(Delegate handler, Object target)\r\n" +
+                "   at System.Windows.RoutedEventHandlerInfo.InvokeHandler(Object target, RoutedEventArgs routedEventArgs)\r\n" +
+                "   at System.Windows.EventRoute.InvokeHandlersImpl(Object source, RoutedEventArgs args, Boolean reRaised)\r\n" +
+                "   at System.Windows.UIElement.RaiseEventImpl(DependencyObject sender, RoutedEventArgs args)\r\n" +
+                "   at System.Windows.UIElement.RaiseTrustedEvent(RoutedEventArgs args)\r\n" +
+                "   at System.Windows.Input.InputManager.ProcessStagingArea()\r\n" +
+                "   at System.Windows.Input.InputManager.ProcessInput(InputEventArgs input)\r\n" +
+                "   at System.Windows.Input.InputProviderSite.ReportInput(InputReport inputReport)\r\n" +
+                "   at System.Windows.Interop.HwndKeyboardInputProvider.ReportInput(IntPtr hwnd, InputMode mode, Int32 timestamp, RawKeyboardActions actions, Int32 scanCode, Boolean isExtendedKey, Boolean isSystemKey, Int32 virtualKey)\r\n" +
+                "   at System.Windows.Interop.HwndKeyboardInputProvider.ProcessKeyAction(MSG& msg, Boolean& handled)\r\n   at System.Windows.Interop.HwndSource.CriticalTranslateAccelerator(MSG& msg, ModifierKeys modifiers)\r\n" +
+                "   at System.Windows.Interop.HwndSource.OnPreprocessMessage(Object param)\r\n   at System.Windows.Threading.ExceptionWrapper.InternalRealCall(Delegate callback, Object args, Int32 numArgs)\r\n" +
+                "   at System.Windows.Threading.ExceptionWrapper.TryCatchWhen(Object source, Delegate callback, Object args, Int32 numArgs, Delegate catchHandler)\r\n" +
+                "</pre>\r\n\r\n\r\n" +
+                "Если после ввода произвольного текста не выделять элемент, введенный в пункте 1, а поставить курсор в конец поля и нажать пробел, то выведется следующее сообщение об ошибке:\r\n\r\n" +
+                "<pre>\r\n" +
+                "System.ArgumentOutOfRangeException: Specified argument was out of the range of valid values.\r\n" +
+                "Parameter name: startIndex\r\n   " +
+                "at System.String.Insert(Int32 startIndex, String value)\r\n   " +
+                "at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.PreviewKey(Key key, Boolean fromCommitChanges)\r\n   " +
+                "at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.entityBox_PreviewKeyDown(Object sender, KeyEventArgs e)\r\n   " +
+                "at System.Windows.RoutedEventArgs.InvokeHandler(Delegate handler, Object target)\r\n   " +
+                "at System.Windows.RoutedEventHandlerInfo.InvokeHandler(Object target, RoutedEventArgs routedEventArgs)\r\n   " +
+                "at System.Windows.EventRoute.InvokeHandlersImpl(Object source, RoutedEventArgs args, Boolean reRaised)\r\n   " +
+                "at System.Windows.UIElement.RaiseEventImpl(DependencyObject sender, RoutedEventArgs args)\r\n   " +
+                "at System.Windows.UIElement.RaiseTrustedEvent(RoutedEventArgs args)\r\n   " +
+                "at System.Windows.Input.InputManager.ProcessStagingArea()\r\n   " +
+                "at System.Windows.Input.InputManager.ProcessInput(InputEventArgs input)\r\n   " +
+                "at System.Windows.Input.InputProviderSite.ReportInput(InputReport inputReport)\r\n   " +
+                "at System.Windows.Interop.HwndKeyboardInputProvider.ReportInput(IntPtr hwnd, InputMode mode, Int32 timestamp, RawKeyboardActions actions, Int32 scanCode, Boolean isExtendedKey, Boolean isSystemKey, Int32 virtualKey)\r\n   " +
+                "at System.Windows.Interop.HwndKeyboardInputProvider.ProcessKeyAction(MSG& msg, Boolean& handled)\r\n   " +
+                "at System.Windows.Interop.HwndSource.CriticalTranslateAccelerator(MSG& msg, ModifierKeys modifiers)\r\n   " +
+                "at System.Windows.Interop.HwndSource.OnPreprocessMessage(Object param)\r\n   at System.Windows.Threading.ExceptionWrapper.InternalRealCall(Delegate callback, Object args, Int32 numArgs)\r\n   " +
+                "at System.Windows.Threading.ExceptionWrapper.TryCatchWhen(Object source, Delegate callback, Object args, Int32 numArgs, Delegate catchHandler)\r\n" +
+                "</pre>\r\n\r\n\r\n\r\n" +
+                "Если позволите, могу предположить, что что-то не так с функцией <code>Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.InputText()</code>. На сколько я понял, она неверно определяет конечный индекс End <code>InternalAutoCompleteItem internalItem = new InternalAutoCompleteItem();</code>\r\n" +
+                "Если свойство End - это индекс окончания введенной строки, а Home - это тачало, то после ввода одного символа в новосозданном internalItem'е End равен Home, который равен нулю. Это немного подозрительно. Возможно из-за этого все остальные функции обсчитываются на этот один символ (отсюда выделение элемента на один короче), так как функции думают, что один элемент короче на 1 символ. \r\n\r\n" +
+                "!2.png!\r\n\r\n" +
+                "Да пребудет с Вами сила!";
 
-            //string testString = "# Зайдите в поле списка, например, список владельцев и выберите одного владельца.\r\n" +
-            //                    "# Нажмите стребку влево, чтобы переместить курсов в начало поля. \r\n" +
-            //                    "# Введите произвольный текст (нажмите цифру 1).\r\n" +
-            //                    "# Нажмите левой кнопкой мыши на выбранное в пункте 1 справочное значение.\r\n" +
-            //                    "# Нажмите клавишу delete для удаление элемента списка.\r\n" +
-            //                    "# Нажмите delete еще раз" +
-            //                    "\r\n" +
-            //                    "\r\n";
 
-            //string testString = "+Подчеркнутый+\r\n*Жирный*\r\n-Зачеркнутый-\r\n_Курсив_\r\n";
-            string testString = "+Подчеркнутый+\r\n*Жирный*\r\n-Зачеркнутый-\r\n_Курсив_\r\n";
+            //string testString = "Ошибка из разряда \"не делайте так\" :)\r\n\r\n" +
+            //    "Пусть есть карточка автомобиль (или любая другая с выпадающим списком, или кнопкой троеточия).\r\n\r\n" +
+            //    "# Зайдите в поле списка, например, список владельцев и выберите одного владельца.\r\n" +
+            //    "# Нажмите стребку влево, чтобы переместить курсов в начало поля. \r\n" +
+            //    "# Введите произвольный текст (нажмите цифру 1).\r\n" +
+            //    "# Нажмите левой кнопкой мыши на выбранное в пункте 1 справочное значение.\r\n" +
+            //    "# Нажмите клавишу delete для удаление элемента списка.\r\n" +
+            //    "# Нажмите delete еще раз\r\n\r\n" +
+
+            //    "Ожидаемое поведение:\r\n" +
+            //    "- Элемент списка выделяется полностью\r\n" +
+            //    "- Элемент удаляется из поля\r\n" +
+            //    "- Произвольный текс, введенный в пункте 3 стирается\r\n\r\n" +
+            //    "Текущее поведение:\r\n" +
+            //    "- Элемент списка выделяется без первой буквы\r\n" +
+            //    "- Выводится сообщение об ошибке ArgumentOutOfRangeException \r\n" +
+            //    "- После удаления элемента списка и повторном нажатии клавиши delete всегда будет выводиться сообщение об ошибке:\r\n\r\n" +
+            //    "<pre>\r\n" +
+            //    "System.ArgumentOutOfRangeException: Length cannot be less than zero.\r\n" +
+            //    "Parameter name: length\r\n" +
+            //    "   at System.String.Substring(Int32 startIndex, Int32 length)\r\n" +
+            //    "   at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.FiniteElements(Int32& x)\r\n" +
+            //    "   at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.InputText()\r\n" +
+            //    "   at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.Erase(Int32 backspace)\r\n" +
+            //    "   at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.PreviewKey(Key key, Boolean fromCommitChanges)\r\n" +
+            //    "   at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.entityBox_PreviewKeyDown(Object sender, KeyEventArgs e)\r\n" +
+            //    "   at System.Windows.RoutedEventArgs.InvokeHandler(Delegate handler, Object target)\r\n" +
+            //    "   at System.Windows.RoutedEventHandlerInfo.InvokeHandler(Object target, RoutedEventArgs routedEventArgs)\r\n" +
+            //    "   at System.Windows.EventRoute.InvokeHandlersImpl(Object source, RoutedEventArgs args, Boolean reRaised)\r\n" +
+            //    "   at System.Windows.UIElement.RaiseEventImpl(DependencyObject sender, RoutedEventArgs args)\r\n" +
+            //    "   at System.Windows.UIElement.RaiseTrustedEvent(RoutedEventArgs args)\r\n" +
+            //    "   at System.Windows.Input.InputManager.ProcessStagingArea()\r\n" +
+            //    "   at System.Windows.Input.InputManager.ProcessInput(InputEventArgs input)\r\n" +
+            //    "   at System.Windows.Input.InputProviderSite.ReportInput(InputReport inputReport)\r\n" +
+            //    "   at System.Windows.Interop.HwndKeyboardInputProvider.ReportInput(IntPtr hwnd, InputMode mode, Int32 timestamp, RawKeyboardActions actions, Int32 scanCode, Boolean isExtendedKey, Boolean isSystemKey, Int32 virtualKey)\r\n" +
+            //    "   at System.Windows.Interop.HwndKeyboardInputProvider.ProcessKeyAction(MSG& msg, Boolean& handled)\r\n   at System.Windows.Interop.HwndSource.CriticalTranslateAccelerator(MSG& msg, ModifierKeys modifiers)\r\n" +
+            //    "   at System.Windows.Interop.HwndSource.OnPreprocessMessage(Object param)\r\n   at System.Windows.Threading.ExceptionWrapper.InternalRealCall(Delegate callback, Object args, Int32 numArgs)\r\n" +
+            //    "   at System.Windows.Threading.ExceptionWrapper.TryCatchWhen(Object source, Delegate callback, Object args, Int32 numArgs, Delegate catchHandler)\r\n" +
+            //    "</pre>\r\n\r\n\r\n" +
+            //    "Если после ввода произвольного текста не выделять элемент, введенный в пункте 1, а поставить курсор в конец поля и нажать пробел, то выведется следующее сообщение об ошибке:\r\n\r\n" +
+            //    "<pre>\r\n" +
+            //    "System.ArgumentOutOfRangeException: Specified argument was out of the range of valid values.\r\n" +
+            //    "Parameter name: startIndex\r\n   " +
+            //    "at System.String.Insert(Int32 startIndex, String value)\r\n   " +
+            //    "at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.PreviewKey(Key key, Boolean fromCommitChanges)\r\n   " +
+            //    "at Tessa.UI.Controls.AutoCompleteCtrl.AutoComplete.entityBox_PreviewKeyDown(Object sender, KeyEventArgs e)\r\n   " +
+            //    "at System.Windows.RoutedEventArgs.InvokeHandler(Delegate handler, Object target)\r\n   " +
+            //    "at System.Windows.RoutedEventHandlerInfo.InvokeHandler(Object target, RoutedEventArgs routedEventArgs)\r\n   " +
+            //    "at System.Windows.EventRoute.InvokeHandlersImpl(Object source, RoutedEventArgs args, Boolean reRaised)\r\n   " +
+            //    "at System.Windows.UIElement.RaiseEventImpl(DependencyObject sender, RoutedEventArgs args)\r\n   " +
+            //    "at System.Windows.UIElement.RaiseTrustedEvent(RoutedEventArgs args)\r\n   " +
+            //    "at System.Windows.Input.InputManager.ProcessStagingArea()\r\n   " +
+            //    "at System.Windows.Input.InputManager.ProcessInput(InputEventArgs input)\r\n   " +
+            //    "at System.Windows.Input.InputProviderSite.ReportInput(InputReport inputReport)\r\n   " +
+            //    "at System.Windows.Interop.HwndKeyboardInputProvider.ReportInput(IntPtr hwnd, InputMode mode, Int32 timestamp, RawKeyboardActions actions, Int32 scanCode, Boolean isExtendedKey, Boolean isSystemKey, Int32 virtualKey)\r\n   " +
+            //    "at System.Windows.Interop.HwndKeyboardInputProvider.ProcessKeyAction(MSG& msg, Boolean& handled)\r\n   " +
+            //    "at System.Windows.Interop.HwndSource.CriticalTranslateAccelerator(MSG& msg, ModifierKeys modifiers)\r\n   " +
+            //    "at System.Windows.Interop.HwndSource.OnPreprocessMessage(Object param)\r\n   at System.Windows.Threading.ExceptionWrapper.InternalRealCall(Delegate callback, Object args, Int32 numArgs)\r\n   " +
+            //    "at System.Windows.Threading.ExceptionWrapper.TryCatchWhen(Object source, Delegate callback, Object args, Int32 numArgs, Delegate catchHandler)\r\n" +
+            //    "</pre>\r\n\r\n\r\n\r\n" +
+            //    "Если позволите, могу предположить, что что-то не так с функцией. На сколько я понял, она неверно определяет конечный индекс End \r\n" +
+            //    "Если свойство End - это индекс окончания введенной строки, а Home - это тачало, то после ввода одного символа в новосозданном internalItem'е End равен Home, который равен нулю. Это немного подозрительно. Возможно из-за этого все остальные функции обсчитываются на этот один символ (отсюда выделение элемента на один короче), так как функции думают, что один элемент короче на 1 символ. \r\n\r\n" +
+
+            //    "Да пребудет с Вами сила!";
 
             Parser parser = new Parser(testString);
             var result = parser.GetParsedString();
