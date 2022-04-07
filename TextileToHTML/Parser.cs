@@ -3,8 +3,10 @@ using System.Text.RegularExpressions;
 using System.Drawing;
 using System;
 using System.IO;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 
-namespace TextileToHTML_Parser.AppData
+namespace TextileToHTML
 {
     public class Parser
     {
@@ -19,6 +21,18 @@ namespace TextileToHTML_Parser.AppData
         /// Результирующая строка.
         /// </summary>
         private string ResultString;
+
+        /// <summary>
+        /// Строка прикрепленных файлов к сообщению.
+        /// </summary>
+        private string AttachmentsString;
+
+        /// <summary>
+        /// Дирректория нахождения экспортированного инцидента.
+        /// </summary>
+        private string IssueDirectory;
+
+        private bool HasAttachments = false;
 
         /// <summary>
         /// Открытие тегов стандартного HTML.
@@ -39,6 +53,11 @@ namespace TextileToHTML_Parser.AppData
         /// Закрытие тегов HTML Tessa.
         /// </summary>
         private Dictionary<string, string> TessaClosingTags = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Список прикрепленных файлов.
+        /// </summary>
+        private Dictionary<string, Guid> AttachmentsFiles = new Dictionary<string, Guid>();
 
         #region Tags Names
 
@@ -130,6 +149,7 @@ namespace TextileToHTML_Parser.AppData
         /// </summary>
         private static readonly string imagesTagTemplate = "<img src=\"(.*?)\" alt=\"\" />";
 
+
         private static readonly Regex _headerOpenTag = new Regex(headerOpenTagTemplate,
            RegexOptions.Singleline | RegexOptions.Compiled);
 
@@ -145,9 +165,15 @@ namespace TextileToHTML_Parser.AppData
 
         #region Constructors
 
-        public Parser(string mainString)
+        public Parser(
+            string mainString,
+            string issueDirectory,
+            Dictionary<string, Guid> attachmentsFiles)
         {
             this.MainString = mainString;
+            this.AttachmentsString = "";
+            this.AttachmentsFiles = attachmentsFiles;
+            this.IssueDirectory = issueDirectory;
 
             this.TextileParseString();
 
@@ -243,11 +269,12 @@ namespace TextileToHTML_Parser.AppData
 
         private void ParseString()
         {
+            this.ParseSlashesSyblol();
+
             foreach (var tag in TessaOpeningTags)
             {
                 this.ParseTag(tag);
             }
-
 
             // удаление лишних символов новой строки.
             this.RemoveSumbolNewString();
@@ -255,10 +282,14 @@ namespace TextileToHTML_Parser.AppData
             this.ParseNewLineTag();
             // преобразуем код "&#8220" и "&#8221" в символы "\\\"".
             this.ParseQuotesSymbol();
-            // преобразуемзаголовки.
+            // преобразуем заголовки.
             this.ParseHeaderString();
 
-            this.ParseAttachmentImages();
+            while (this.TryGetMathes(_imagesTag, out MatchCollection matches))
+            {
+                this.HasAttachments = true;
+                this.ParseAttachmentsImages(matches[0]);
+            }
 
             // установка начала и конца строки.
             this.SetPreAndPostString();
@@ -302,7 +333,19 @@ namespace TextileToHTML_Parser.AppData
         /// </summary>
         private void SetPreAndPostString()
         {
-            var preString = "{\"Text\":\"<div class=\\\"forum-div\\\">";
+            if (AttachmentsString != "" && AttachmentsString != "{")
+            {
+                var preAttachmentString = "{\"Attachments\":[";
+                var postAttachmentString = "],";
+
+                AttachmentsString = $"{preAttachmentString}{AttachmentsString}{postAttachmentString}";
+            }
+            else
+            {
+                AttachmentsString = "{";
+            }
+
+            var preString = $"{AttachmentsString}\"Text\":\"<div class=\\\"forum-div\\\">";
             var postString = "</div>\"}";
 
             ResultString = ResultString.Insert(0, preString);
@@ -331,6 +374,11 @@ namespace TextileToHTML_Parser.AppData
             ResultString = ResultString.Replace("&#8221;", "\\\"");
         }
 
+        private void ParseSlashesSyblol()
+        {
+            ResultString = ResultString.Replace(@"\", @"\\");
+        }
+
         /// <summary>
         /// Преобразование тега <h[1-6]> в жирный 18 шрифт Tessa.
         /// </summary>
@@ -346,48 +394,135 @@ namespace TextileToHTML_Parser.AppData
             }
         }
 
-        private void ParseAttachmentImages()
+        /// <summary>
+        /// Получить совпадения с шаблоном regex в в строке.
+        /// </summary>
+        /// <param name="_regex">Регулярное выражение.</param>
+        /// <param name="matchCollection">Списко совпадений с шаблоном.</param>
+        /// <returns>Истина - удалось получить.</returns>
+        private bool TryGetMathes(Regex _regex, out MatchCollection matchCollection)
         {
-            var matches = _imagesTag.Matches(ResultString);
-            if(matches.Count > 0)
+            matchCollection = _regex.Matches(ResultString);
+            if (matchCollection.Count > 0)
             {
-                var fileDirectory = $"D:\\WORK_SYNTELLECT\\OtherFiles\\Migration\\9910\\{matches[0].Groups[1]}";
-                var image = Image.FromFile(fileDirectory);
-                var resizeImg = (Image)(new Bitmap(image, new Size { Width = image.Width / 3, Height = image.Height / 3 }));
+                return true;
+            }
+            return false;
+        }
 
-                var Id = new Guid("ea1edecf-0f7d-463f-a013-fde00e0cbc55");
-                var caption = Id.ToString().Replace("-", "");
-                var uri = $"https:\\\\{caption}";
-                var width = image.Size.Width / 3;
-                var height = image.Size.Height / 3;
+        /// <summary>
+        /// Преобразование строк с прикрепленными изображениями.
+        /// </summary>
+        /// <param name="matchImages">Совпадение с шаблоном регулярного выражения.</param>
+        private void ParseAttachmentsImages(Match matchImages)
+        {
+            string fileName = matchImages.Groups[1].Value;
+            var fileDirectory = $"{this.IssueDirectory}\\{fileName}";
 
-                var startString =
-                    "{\"Attachments\":[";
+            this.GenerateAttachemntsString(fileName);
+            this.ParseAttachmentImage(fileDirectory, fileName, matchImages);
+        }
 
-                var captionString =
+        /// <summary>
+        /// Создает строку Attachments.
+        /// </summary>
+        /// <param name="fileName">Имя файла.</param>
+        private void GenerateAttachemntsString(string fileName)
+        {
+            var id = this.AttachmentsFiles[fileName];
+            var caption = id.ToString().Replace("-", "");
+            var uri = $"https:\\\\{caption}";
+
+            if (this.AttachmentsString != "")
+            {
+                this.AttachmentsString += ",";
+            }
+
+            this.AttachmentsString +=
                     $"{{\"Caption\":\"{caption}\"," +
                     $"\"FileName\":\"\"," +
                     $"\"Uri\":\"{uri}\"," +
-                    $"\"ID::uid\":\"{Id}\"," +
+                    $"\"ID::uid\":\"{id}\"," +
                     $"\"MessageID::uid\":\"00000000-0000-0000-0000-000000000000\"," +
                     $"\"StoreMode::int\":0," +
                     $"\"Type::int\":2}}";
+        }
 
-                var finishString = "],";
+        /// <summary>
+        /// Преобразуем строку с прикрепленными изображениями.
+        /// </summary>
+        /// <param name="fileDirectory">Расоложение файла.</param>
+        /// <param name="fileName">Имя файла.</param>
+        /// <param name="match">Совпадение с шаблоном регулярного выражения.</param>
+        private void ParseAttachmentImage(
+            string fileDirectory,
+            string fileName,
+            Match match)
+        {
+            var id = this.AttachmentsFiles[fileName];
+            var caption = id.ToString().Replace("-", "");
+            var mainImage = Image.FromFile(fileDirectory);
+            var resizeImage = this.ResizeImage(mainImage, (int)(mainImage.Width * 0.3), (int)(mainImage.Height * 0.3));
 
-                var fileBytes = File.ReadAllBytes(fileDirectory);
-                var base64FileString = Convert.ToBase64String(fileBytes);
+            var base64FileString = this.GetBase64StringFromInage(resizeImage);
 
-                var textString =
-                    $"<p><span><img data-custom-style=\\\"width:{width};height:{height};\\\" " +
-                    $"name=\\\"{caption}\\\" " +
-                    $"src=\\\"data:image/png;base64,{base64FileString}\\\"></span></p>";
+            var textString =
+                $"<p><span><img data-custom-style=\\\"width:{resizeImage.Width};height:{resizeImage.Height};\\\" " +
+                $"name=\\\"{caption}\\\" " +
+                $"src=\\\"data:image/png;base64,{base64FileString}\\\"></span></p>";
 
-                var preString = "\"Text\":\"<div class=\\\"forum-div\\\">";
-                var postString = "</div>\"}";
+            ResultString = ResultString.Remove(match.Index, match.Length);
+            ResultString = ResultString.Insert(match.Index, textString);
+        }
 
-                var resString = startString + captionString + finishString + preString + textString + postString;
+        /// <summary>
+        /// Resize the image to the specified width and height.
+        /// </summary>
+        /// <param name="image">The image to resize.</param>
+        /// <param name="width">The width to resize to.</param>
+        /// <param name="height">The height to resize to.</param>
+        /// <returns>The resized image.</returns>
+        private Bitmap ResizeImage(Image image, int width, int height)
+        {
+            var destRect = new Rectangle(0, 0, width, height);
+            var destImage = new Bitmap(width, height);
+
+            destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
+
+            using (var graphics = Graphics.FromImage(destImage))
+            {
+                graphics.CompositingMode = CompositingMode.SourceCopy;
+                graphics.CompositingQuality = CompositingQuality.HighQuality;
+                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphics.SmoothingMode = SmoothingMode.HighQuality;
+                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+                using (var wrapMode = new ImageAttributes())
+                {
+                    wrapMode.SetWrapMode(WrapMode.TileFlipXY);
+                    graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
+                }
             }
+
+            return destImage;
+        }
+
+        /// <summary>
+        /// Получить строку Base64 из изображения.
+        /// </summary>
+        /// <param name="image">Изображение.</param>
+        /// <returns>Строка Base64.</returns>
+        private string GetBase64StringFromInage(Image image)
+        {
+            string base64String = null;
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                image.Save(ms, ImageFormat.Jpeg);
+                base64String = Convert.ToBase64String(ms.ToArray());
+            }
+
+            return base64String;
         }
 
         #endregion
