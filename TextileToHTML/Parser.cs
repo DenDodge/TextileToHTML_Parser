@@ -32,7 +32,10 @@ namespace TextileToHTML
         /// </summary>
         private string IssueDirectory;
 
-        private bool HasAttachments = false;
+        /// <summary>
+        /// Флаг, обозначающий преобразование текста в топике.
+        /// </summary>
+        private bool IsTopic = false;
 
         /// <summary>
         /// Открытие тегов стандартного HTML.
@@ -168,12 +171,14 @@ namespace TextileToHTML
         public Parser(
             string mainString,
             string issueDirectory,
-            Dictionary<string, Guid> attachmentsFiles)
+            Dictionary<string, Guid> attachmentsFiles,
+            bool isTopic = false)
         {
             this.MainString = mainString;
             this.AttachmentsString = "";
             this.AttachmentsFiles = attachmentsFiles;
             this.IssueDirectory = issueDirectory;
+            this.IsTopic = isTopic;
 
             this.TextileParseString();
 
@@ -280,15 +285,22 @@ namespace TextileToHTML
             this.RemoveSumbolNewString();
             // преобразуем тег <br /> в </p><p>.
             this.ParseNewLineTag();
-            // преобразуем код "&#8220" и "&#8221" в символы "\\\"".
-            this.ParseQuotesSymbol();
+            if (!IsTopic)
+            {
+                // преобразуем код "&#8220" и "&#8221" в символы "\\\"".
+                this.ParseQuotesSymbol();
+            }
             // преобразуем заголовки.
             this.ParseHeaderString();
 
             while (this.TryGetMathes(_imagesTag, out MatchCollection matches))
             {
-                this.HasAttachments = true;
                 this.ParseAttachmentsImages(matches[0]);
+            }
+
+            if (IsTopic)
+            {
+                this.RemoveSlachSyblol();
             }
 
             // установка начала и конца строки.
@@ -348,6 +360,12 @@ namespace TextileToHTML
             var preString = $"{AttachmentsString}\"Text\":\"<div class=\\\"forum-div\\\">";
             var postString = "</div>\"}";
 
+            if (IsTopic)
+            {
+                preString = "<div class=\"forum-div\">";
+                postString = "</div>";
+            }
+
             ResultString = ResultString.Insert(0, preString);
             ResultString += postString;
         }
@@ -374,9 +392,17 @@ namespace TextileToHTML
             ResultString = ResultString.Replace("&#8221;", "\\\"");
         }
 
+        /// <summary>
+        /// Преобзазовывает один символ "\" в два символа "\\".
+        /// </summary>
         private void ParseSlashesSyblol()
         {
             ResultString = ResultString.Replace(@"\", @"\\");
+        }
+
+        private void RemoveSlachSyblol()
+        {
+            ResultString = ResultString.Replace("\\\"", "\"");
         }
 
         /// <summary>
@@ -418,8 +444,10 @@ namespace TextileToHTML
         {
             string fileName = matchImages.Groups[1].Value;
             var fileDirectory = $"{this.IssueDirectory}\\{fileName}";
-
-            this.GenerateAttachemntsString(fileName);
+            if (!IsTopic)
+            {
+                this.GenerateAttachemntsString(fileName);
+            }
             this.ParseAttachmentImage(fileDirectory, fileName, matchImages);
         }
 

@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
-using TextileToHTML_Parser.AppData;
+using TextileToHTML;
 
 namespace TextileToHTML_Parser.Tests
 {
