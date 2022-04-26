@@ -152,6 +152,8 @@ namespace TextileToHTML
         /// </summary>
         private static readonly string imagesTagTemplate = "<img src=\"(.*?)\" alt=\"\" />";
 
+        private static readonly string preCodeTagsTemplates = "<pre><code .*?>";
+
 
         private static readonly Regex _headerOpenTag = new Regex(headerOpenTagTemplate,
            RegexOptions.Singleline | RegexOptions.Compiled);
@@ -161,6 +163,9 @@ namespace TextileToHTML
 
         private static readonly Regex _imagesTag = new Regex(imagesTagTemplate,
             RegexOptions.Multiline);
+
+        private static readonly Regex _preCodeTag = new Regex(preCodeTagsTemplates,
+            RegexOptions.Singleline | RegexOptions.Compiled);
 
         #endregion
 
@@ -190,6 +195,10 @@ namespace TextileToHTML
 
         #region Public Methods
 
+        /// <summary>
+        /// Получить преобразованную строку.
+        /// </summary>
+        /// <returns>Преобразовання строка.</returns>
         public string GetParsedString()
         {
             this.ParseString();
@@ -272,6 +281,9 @@ namespace TextileToHTML
 
         #endregion
 
+        /// <summary>
+        /// Преобразовать строку, переданную в конструкторе.
+        /// </summary>
         private void ParseString()
         {
             this.ParseSlashesSyblol();
@@ -285,11 +297,13 @@ namespace TextileToHTML
             this.RemoveSumbolNewString();
             // преобразуем тег <br /> в </p><p>.
             this.ParseNewLineTag();
+
             if (!IsTopic)
             {
                 // преобразуем код "&#8220" и "&#8221" в символы "\\\"".
                 this.ParseQuotesSymbol();
             }
+
             // преобразуем заголовки.
             this.ParseHeaderString();
 
@@ -337,7 +351,17 @@ namespace TextileToHTML
         /// </summary>
         private void TextileParseString()
         {
+            this.ParsePreCodeTasg();
+            // преобразуем символы "<" и ">" в символы "&lt;" и "&gt;".
+            MainString = MainString.Replace("<", @"&lt;");
+            MainString = MainString.Replace(">", @"&gt;");
+            // преобразуем собсвенные в теги <code>.
+            MainString = MainString.Replace("@code", "<code>");
+            MainString = MainString.Replace("@/code", "</code>");
+            // преобразуем строку в HTML.
             ResultString = TextileToHTML.TextileFormatter.FormatString(MainString);
+            // подчищаем символ "&amp;", которые сгенирировался в процессе преобразования textile в HTML.
+            ResultString = ResultString.Replace("&amp;", "&");
         }
 
         /// <summary>
@@ -406,7 +430,7 @@ namespace TextileToHTML
         }
 
         /// <summary>
-        /// Преобразование тега <h[1-6]> в жирный 18 шрифт Tessa.
+        /// Преобразование тега "h[1-6]" в жирный 18 шрифт Tessa.
         /// </summary>
         private void ParseHeaderString()
         {
@@ -551,6 +575,21 @@ namespace TextileToHTML
             }
 
             return base64String;
+        }
+
+        /// <summary>
+        /// Привести теги "pre code" и "/code /pre".
+        /// </summary>
+        private void ParsePreCodeTasg()
+        {
+            // для корректного преобразования символов сравнения используем собственные теги.
+            while (Regex.IsMatch(MainString, preCodeTagsTemplates, RegexOptions.IgnorePatternWhitespace | RegexOptions.Singleline | RegexOptions.Compiled))
+            {
+                MainString = _preCodeTag.Replace(MainString, "@code");
+            }
+            MainString = MainString.Replace("</code></pre>", "@/code");
+            MainString = MainString.Replace("<pre>", "@code");
+            MainString = MainString.Replace("</pre>", "@/code");
         }
 
         #endregion
